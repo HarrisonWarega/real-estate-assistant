@@ -1,0 +1,12 @@
+# Ignore local copies and test scripts
+*Copy*.py
+test.py
+
+# Ignore python caches and virtual environments
+__pycache__/
+.venv/
+.env
+
+# Ignore the local vector database storage files inside resources
+# (This keeps the folder structure and images, but ignores heavy binary DB matrices)
+resources/vectorstore/
