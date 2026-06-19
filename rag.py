@@ -1,5 +1,5 @@
 # ============================
-# CORE IMPORTS
+# SYSTEM ENVIRONMENT FLAGS 
 # ============================
 import os
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -7,9 +7,11 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 from uuid import uuid4  # unique IDs for vector DB chunks
 from dotenv import load_dotenv  # environment variables
 from pathlib import Path
+import urllib.request
+from bs4 import BeautifulSoup
 
-# document loading
-from langchain_community.document_loaders import UnstructuredURLLoader
+# Core document structure
+from langchain_core.documents import Document
 # text chunking
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 # vector database
@@ -79,7 +81,6 @@ def initialize_components():
 # PROCESS URLs → BUILD KNOWLEDGE BASE
 # ============================
 def process_urls(urls):
-
     global qa_chain
 
     # STEP 1: initialize LLM + vector DB
@@ -90,22 +91,40 @@ def process_urls(urls):
     yield "Resetting vector database..."
     vector_store.reset_collection()
 
-    # STEP 3: load web pages
+    # STEP 3: load web pages using robust native scraping
     yield "Loading URLs..."
-    loader = UnstructuredURLLoader(
-        urls=urls,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        }      
-    )
-    docs = loader.load()
+    docs = []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+    }
+
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as response:
+                html = response.read().decode('utf-8', errors='ignore')
+            
+            # Extract clean text from HTML
+            soup = BeautifulSoup(html, "html.parser")
+            for script_or_style in soup(["script", "style", "nav", "footer", "header"]):
+                script_or_style.extract()  # strip out layout junk
+                
+            text_content = soup.get_text(separator="\n")
+            lines = (line.strip() for line in text_content.splitlines())
+            clean_text = "\n".join(l for l in lines if l)
+            
+            # Wrap into LangChain Document format
+            docs.append(Document(page_content=clean_text, metadata={"source": url}))
+        except Exception as e:
+            yield f"Warning: Failed to scrape {url} due to {str(e)}"
+
     total_chars = sum(len(d.page_content) for d in docs)
     yield f"Loaded {len(docs)} document(s), {total_chars} characters total"
+    
     if not docs or total_chars < 200:
         raise ValueError(
-            "No usable content was scraped from the given URL(s) — the site likely blocked "
-            "the request (bot detection) rather than raising an error. Try a different source."
+            "No usable content was scraped from the given URL(s). The server might be blocking the request range."
         )
 
     # STEP 4: split documents into chunks
@@ -129,77 +148,35 @@ def process_urls(urls):
 # ================================================
 
 def generate_answer(query):
-
     global qa_chain
 
-    # safety check
     if vector_store is None:
         raise RuntimeError("Run process_urls first")
 
-    # create retriever from vector DB (MMR reduces redundancy)
     retriever = vector_store.as_retriever(
-        search_type="mmr",  # diversity-aware retrieval
+        search_type="mmr",  
         search_kwargs={"k": 5}
     )
 
-    # build chain ONLY ONCE
     if qa_chain is None:
-
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             retriever=retriever,
-            return_source_documents=True,
-            chain_type_kwargs={
-                "prompt": None  # Rely on default but can extend later
-            }
+            return_source_documents=True
         )
 
-    # run retrieval + generation
     result = qa_chain.invoke({"query": query})
-
-    # extract answer
     answer = result["result"]
-
-    # extract sources
     sources = result.get("source_documents", [])
     
-# =============================
-#  CLEAN + DEDUPLICATE SOURCES
-# =============================
-
     seen = set()
     unique_sources = []
-    
     for doc in sources:
         src = doc.metadata.get("source", "unknown")
-    if src not in seen:
-        seen.add(src)
-        unique_sources.append(src)
+        if src not in seen:
+            seen.add(src)
+            unique_sources.append(src)
     
     formatted_sources = "\n".join(unique_sources)
-
-# ======================
-# DEBUG TRACE (optional)
-# ======================
-    
-    for i, doc in enumerate(sources):
-        print(f"\n--- CHUNK {i} ---")
-        print(doc.page_content[:300])
-    
     return answer, formatted_sources
-    
-if __name__ == "__main__":
-    urls = [
-        "https://www.cnbc.com/2024/12/21/how-the-federal-reserves-rate-policy-affects-mortgages.html",
-        "https://www.cnbc.com/2024/12/20/why-mortgage-rates-jumped-despite-fed-interest-rate-cut.html"
-    ]
 
-    for status in process_urls(urls):
-        print(status)
-
-    answer, sources = generate_answer(
-        "Tell me what was the 30 year fixed mortgage rate along with the date?"
-    )
-
-    print(f"Answer: {answer}")
-    print(f"Sources: {sources}")
