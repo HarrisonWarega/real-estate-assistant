@@ -100,6 +100,13 @@ def process_urls(urls):
         }      
     )
     docs = loader.load()
+    total_chars = sum(len(d.page_content) for d in docs)
+    yield f"Loaded {len(docs)} document(s), {total_chars} characters total"
+    if not docs or total_chars < 200:
+        raise ValueError(
+            "No usable content was scraped from the given URL(s) — the site likely blocked "
+            "the request (bot detection) rather than raising an error. Try a different source."
+        )
 
     # STEP 4: split documents into chunks
     yield "Splitting documents..."
