@@ -2,7 +2,7 @@
 
 An end-to-end Retrieval-Augmented Generation (RAG) application that scrapes real estate news articles, indexes them into a vector space, and provides grounded answers with clickable source citations. 
 
-Live Demo on Streamlit Cloud: [Insert Your Streamlit App Link Here]
+Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-jg4n8z.streamlit.app/
 
 ## Tech Stack
 
