@@ -1,6 +1,9 @@
 # ============================
 # CORE IMPORTS
 # ============================
+import os
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
 from uuid import uuid4  # unique IDs for vector DB chunks
 from dotenv import load_dotenv  # environment variables
 from pathlib import Path
