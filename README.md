@@ -2,9 +2,9 @@
 
 An end-to-end Retrieval-Augmented Generation (RAG) application that scrapes real estate news articles, indexes them into a vector space, and provides grounded answers with clickable source citations. 
 
-Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-jg4n8z.streamlit.app/
+Live Demo on Streamlit Cloud: [Insert Your Streamlit App Link Here]
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Orchestration**: LangChain (RetrievalQA pipeline)
 * **Vector Storage**: ChromaDB (L2 Euclidean distance matching)
@@ -15,7 +15,7 @@ Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-
 
 ![Product Screenshot](resources/image.png)
 
-## ✨ Core Features
+## Core Features
 
 * **Anti-Bot Scraping**: Uses native web request headers to safely bypass cloud datacenter scraping restrictions.
 * **Smart Text Chunking**: Implements `RecursiveCharacterTextSplitter` with context overlap to maintain document meaning.
@@ -23,31 +23,31 @@ Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-
 * **Grounded Answers**: Context is passed directly to Llama-3.3 to guarantee factual, hallucination-free output.
 * **Automated Citations**: Extracts and displays clean, unique source links for every generated response.
 
-## 📐 System Architecture
+## System Architecture
 
 ```text
        Target URLs
             │
-                    ▼
+            ▼
    urllib + BeautifulSoup (Clean Text Extraction)
             │
-                    ▼
+            ▼
    Recursive Text Splitter (Chunks + Overlap)
             │
-                    ▼
+            ▼
    HuggingFace Embeddings (Vector Generation)
             │
-                    ▼
+            ▼
    Chroma Vector Database (Persistent Indexing)
             │
-                    ▼
+            ▼
    MMR Retriever ---> Groq LLM (Llama 3.3 Context Prompt)
-            │
-                    ▼
-   Answer + Sources
+                                    │
+                                    ▼
+                             Answer + Sources
 ```
 
-## 🚀 Local Installation & Setup
+## Local Installation & Setup
 
 1. **Clone the repository:**
    ```bash
@@ -71,7 +71,7 @@ Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-
    streamlit run main.py
    ```
 
-## 🎯 Production Testing Guide
+## Production Testing Guide
 
 The system has been heavily verified using premium real estate news segments. To test the pipeline end-to-end:
 
@@ -82,6 +82,6 @@ The system has been heavily verified using premium real estate news segments. To
 3. Ask specific contextual questions like: *"What was the 30-year fixed mortgage rate along with the mentioned date?"*
 
 ---
-## 📄 License
+## License
 This project is open-source and available under the **MIT License**.
 
