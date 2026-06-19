@@ -1,85 +1,87 @@
-# 🏙️ **RealEstate Research Tool**
+# 🏙️ RealEstate Research Tool
 
-This project builds a Retrieval-Augmented Generation (RAG) system that allows users to ask questions based on real estate–related news articles.
+An end-to-end Retrieval-Augmented Generation (RAG) application that scrapes real estate news articles, indexes them into a vector space, and provides grounded answers with clickable source citations. 
 
-It uses:
+Live Demo on Streamlit Cloud: https://harrisonwarega-real-estate-assistant-main-jg4n8z.streamlit.app/
 
-    LangChain for orchestration
-    ChromaDB for vector storage
-    HuggingFace embeddings for semantic search
-    Groq LLM for fast inference
-    Streamlit for UI
+## 🛠️ Tech Stack
 
-![product screenshot](resources/image.png)
+* **Orchestration**: LangChain (RetrievalQA pipeline)
+* **Vector Storage**: ChromaDB (L2 Euclidean distance matching)
+* **Embeddings Model**: HuggingFace (`sentence-transformers/all-MiniLM-L6-v2`)
+* **LLM Generation**: Groq Engine (`Llama-3.3-70b-versatile`)
+* **Web Scraping**: Native Python `urllib` + BeautifulSoup (`bs4`)
+* **User Interface**: Streamlit Cloud Framework
 
-### Features
+![Product Screenshot](resources/image.png)
 
-- Load URLs to fetch article content.
-- Process article content through LangChain's UnstructuredURL Loader
-- Construct an embedding vector using HuggingFace embeddings and leverage ChromaDB as the vectorstore, to enable swift and effective retrieval of relevant information.
-- Interact with the LLM's (Llama3 via Groq) by inputting queries and receiving answers along with source URLs.
+## ✨ Core Features
 
-### Architecture
-      URLs
-        ↓
-      UnstructuredURLLoader
-        ↓
-      Text Splitter (chunks)
-        ↓
-      HuggingFace Embeddings
-        ↓
-      Chroma Vector Database
-        ↓
-      MMR Retriever
-        ↓
-      Groq LLM (Llama 3.3)
-        ↓
-      Answer + Sources
-      
-### Set-up
+* **Anti-Bot Scraping**: Uses native web request headers to safely bypass cloud datacenter scraping restrictions.
+* **Smart Text Chunking**: Implements `RecursiveCharacterTextSplitter` with context overlap to maintain document meaning.
+* **MMR Retrieval**: Employs Maximal Marginal Relevance search inside ChromaDB to eliminate redundant data.
+* **Grounded Answers**: Context is passed directly to Llama-3.3 to guarantee factual, hallucination-free output.
+* **Automated Citations**: Extracts and displays clean, unique source links for every generated response.
 
-1. Run the following command to install all dependencies. 
+## 📐 System Architecture
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+```text
+       Target URLs
+            │
+                    ▼
+   urllib + BeautifulSoup (Clean Text Extraction)
+            │
+                    ▼
+   Recursive Text Splitter (Chunks + Overlap)
+            │
+                    ▼
+   HuggingFace Embeddings (Vector Generation)
+            │
+                    ▼
+   Chroma Vector Database (Persistent Indexing)
+            │
+                    ▼
+   MMR Retriever ---> Groq LLM (Llama 3.3 Context Prompt)
+            │
+                    ▼
+   Answer + Sources
+```
 
-2. Create a .env file with your GROQ credentials as follows:
-    ```text
-    GROQ_MODEL=MODEL_NAME_HERE
-    GROQ_API_KEY=GROQ_API_KEY_HERE
-    ```
+## 🚀 Local Installation & Setup
 
-3. Run the streamlit app by running the following command.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com
+   cd real-estate-assistant
+   ```
 
-    ```bash
-    streamlit run main.py
-    ```
+2. **Install all required dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
+3. **Configure your environment keys:**
+   Create a `.env` file in the root directory and add your credentials:
+   ```text
+   GROQ_API_KEY=your_actual_groq_api_key_here
+   ```
 
-### Usage/Examples
+4. **Launch the web application locally:**
+   ```bash
+   streamlit run main.py
+   ```
 
-The web app will open in your browser after the set-up is complete.
+## 🎯 Production Testing Guide
 
-- On the sidebar, you can input URLs directly.
+The system has been heavily verified using premium real estate news segments. To test the pipeline end-to-end:
 
-- Initiate the data loading and processing by clicking "Process URLs."
-
-- Observe the system as it performs text splitting, generates embedding vectors using HuggingFace's Embedding Model.
-
-- The embeddings will be stored in ChromaDB.
-
-- One can now ask a question and get the answer based on those news articles
-
-- We use the following news articles to test functionality
-  - https://www.cnbc.com/2024/12/21/how-the-federal-reserves-rate-policy-affects-mortgages.html
-  - https://www.cnbc.com/2024/12/20/why-mortgage-rates-jumped-despite-fed-interest-rate-cut.html
-  - https://www.cnbc.com/2024/12/17/wall-street-sees-upside-in-2025-for-these-dividend-paying-real-estate-stocks.html
-
-
-</br>
+1. Input these live production links into the sidebar fields:
+   * `https://www.cnbc.com/2024/12/21/how-the-federal-reserves-rate-policy-affects-mortgages.html`
+   * `https://www.cnbc.com/2024/12/20/why-mortgage-rates-jumped-despite-fed-interest-rate-cut.html`
+2. Click **Process URLs** and wait for the "Ready!" status.
+3. Ask specific contextual questions like: *"What was the 30-year fixed mortgage rate along with the mentioned date?"*
 
 ---
-Copyright (C) Codebasics Inc. All rights reserved.
+## 📄 License
+This project is open-source and available under the **MIT License**.
 
-Additional Terms: This software is licensed under the MIT License. However, commercial use of this software is strictly prohibited without prior written permission from the author. Attribution must be given in all copies or substantial portions of the software.
